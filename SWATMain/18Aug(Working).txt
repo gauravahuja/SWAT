@@ -1,0 +1,806 @@
+//Put Led 2 in forward direction
+//Current Stepper Mode: Full Step
+//Step Angle = 1.8
+#include "ConsoleSettings.h"
+#include "OpenCVHeaders.h"
+#include "Camera.h"
+#include "Utility.h"
+#include "VectorAlgebra.h"
+#include "Messages.h"
+#include <iostream>
+#include <conio.h>
+
+using namespace std;
+
+const double BaseCampRadius = 0.15;	//Distance in Meters
+const unsigned int NumberOfBaseCamps = 3;	//Circular
+const unsigned int NumberOfFortsPerBaseCamp = 3;
+//const bool CheckForSimilarRadius = true;	//Base Camps Have Same Radius
+const bool CheckForSimilarDistance = true;	//Base Camp centers at same radius
+
+struct FortStruct
+{
+	unsigned int Colour;
+	bool Conquered;
+	CvPoint Center;
+};
+
+struct BaseCampStruct
+{
+	int Radius;
+	CvPoint Center;
+	FortStruct Fort[NumberOfFortsPerBaseCamp];
+}BaseCamp[NumberOfBaseCamps];
+double MetersPerPixel = 0;
+double PixelsPerMeter = 0;
+
+void Initialize()
+{
+	ZeroMemory(BaseCamp, sizeof(BaseCampStruct)*NumberOfBaseCamps);
+	SetConsoleScreen();
+	StartCam(false);
+	InitializeMessages();
+}
+
+void DeInitialize()
+{
+	StopCam();
+	DeInitializeMessages();
+	cvDestroyAllWindows();
+}
+
+int FindBaseCamps()
+{
+	/*
+	IplImage *Frame = cvLoadImage("Test.bmp");
+	if(Frame == NULL)
+	{
+		MessageBoxA(NULL, "ImageError", "Error", MB_OK | MB_ICONERROR);
+		return -1;
+	}
+	*/
+
+	while(!isFrameAvailable());
+	IplImage *ArenaImage = cvCloneImage(Frame);
+	IplImage *grArenaImage = cvCreateImage(cvGetSize(Frame), IPL_DEPTH_8U, 1);
+	cvCvtColor(ArenaImage, grArenaImage, CV_BGR2GRAY);
+	cvSmooth(grArenaImage, grArenaImage, CV_GAUSSIAN, 9);
+	
+	IplImage *Gradient = cvCloneImage(grArenaImage);
+	IplImage *Temp = cvCloneImage(grArenaImage);
+	cvMorphologyEx(grArenaImage, Gradient, Temp, NULL, CV_MOP_GRADIENT);
+
+	IplImage *CannyCircle = cvCreateImage(cvGetSize(Frame), IPL_DEPTH_8U, 1);
+	cvZero(CannyCircle);
+	CvMemStorage *Storage = cvCreateMemStorage(0);
+	CvSeq *FoundCircles;
+
+	//Variables For Canny Algorithm
+	int CannyMinLowThreshold = 10;
+	int CannyMaxLowThreshold = 50;
+	
+	//Variables For HoughCircles Algorithm
+	int CircleMinDistance = 15;
+	int CircleAccumulatorThreshold = 0;
+	int CircleMaxAccumulatorThreshold = 80;		//Needs to be set before runtime
+	int CircleMinAccumulatorThreshold = 25;		//Needs to be set before runtime
+	int CircleMinRadius = 15;					//To be Set to avoid inappropiate Circles
+	int CircleMaxRadius = ArenaImage->width/3;
+
+	int *Position = new int[NumberOfBaseCamps];	//Stores index of found circles in the sequence
+	CvPoint *CenterPoints = new CvPoint[NumberOfBaseCamps];
+	int *RadiusOfFoundCircles = new int[NumberOfBaseCamps];
+	int PositionVariable = 0;
+	double RadiusDeviation = 10;	//Needs to be set before runtime
+	double DistanceDeviation = 30;	//Needs to be set before runtime
+	
+	bool Found = false;
+	int i,j;
+	float *Circle = NULL;
+	float TempRadius;
+
+	/*
+	For Debugging
+	*/
+	cvNamedWindow("Canny Image", CV_WINDOW_AUTOSIZE);
+	
+	
+	while((CannyMaxLowThreshold >= CannyMinLowThreshold) && (!Found))
+	{
+		cvCanny(Gradient, CannyCircle, CannyMinLowThreshold, CannyMinLowThreshold*3);
+		
+		/*
+		For Debugging
+		
+		cout<<"Canny Threshold: "<<CannyMaxLowThreshold<<endl;
+		cvShowImage("Canny Image", CannyCircle);
+		//cvWaitKey();
+		*/
+	
+		for(CircleAccumulatorThreshold = CircleMaxAccumulatorThreshold; (CircleAccumulatorThreshold >= CircleMinAccumulatorThreshold) && (!Found); CircleAccumulatorThreshold--)
+		{
+			FoundCircles = cvHoughCircles(CannyCircle, Storage, CV_HOUGH_GRADIENT, 1, CircleMinDistance, 1, CircleAccumulatorThreshold, CircleMinRadius, CircleMaxRadius);
+			Circle = NULL;
+			TempRadius = 0;
+
+			/*
+			For Debugging
+			
+			cout<<"Circle Accumulator Threshold: "<<CircleAccumulatorThreshold<<endl;
+			cout<<"Total Cirlces: "<<FoundCircles->total<<endl;
+			//cvWaitKey();
+			*/
+			
+
+			//Algorithm to find Base Camps(>=2) by looking for circles with similar radius and similar distance between their centers(curerntly not implemented)
+			for(i = 0; (i <= FoundCircles->total - (int)NumberOfBaseCamps) && (!Found); i++)
+			{
+				PositionVariable = 0;
+				Circle = (float*)cvGetSeqElem(FoundCircles, i);
+				TempRadius = Circle[2];
+				
+				Position[PositionVariable] = i;
+				CenterPoints[PositionVariable].x = cvRound(Circle[0]);
+				CenterPoints[PositionVariable].y = cvRound(Circle[1]);
+				RadiusOfFoundCircles[PositionVariable] = cvRound(Circle[2]);
+				PositionVariable++;
+				
+				for(j = i+1; j < FoundCircles->total; j++)
+				{
+					Circle = (float*)cvGetSeqElem(FoundCircles, j);
+					//Checking For Similar Radius
+					if(isNumberInBetween(Circle[2],TempRadius-RadiusDeviation, TempRadius+RadiusDeviation))
+					{
+						Position[PositionVariable] = j;
+						CenterPoints[PositionVariable].x = cvRound(Circle[0]);
+						CenterPoints[PositionVariable].y = cvRound(Circle[1]);
+						RadiusOfFoundCircles[PositionVariable] = cvRound(Circle[2]);
+						PositionVariable++;				
+					}
+					if(PositionVariable == NumberOfBaseCamps)
+					{
+						break;
+					}
+				}
+				if(PositionVariable == NumberOfBaseCamps)
+				{
+					//Check For Similar Distances Between Centers
+					//Available for 3 base camps only
+					if(CheckForSimilarDistance)
+					{
+						
+						double *d = new double[NumberOfBaseCamps];
+						d[0] = DistanceBetweenPoints(CenterPoints[0], CenterPoints[1]);
+						d[1] = DistanceBetweenPoints(CenterPoints[1], CenterPoints[2]);
+						d[2] = DistanceBetweenPoints(CenterPoints[2], CenterPoints[0]);
+						
+						/*
+						For Debugging
+						
+						cout<<"Distance between 0 and 1: "<<d[0]<<endl;
+						cout<<"Distance between 1 and 2: "<<d[1]<<endl;
+						cout<<"Distance between 2 and 3: "<<d[2]<<endl;
+						cvWaitKey();
+						*/
+
+						bool *b = new bool[NumberOfBaseCamps-1];
+						b[0] = isNumberInBetween(d[0], d[1] - DistanceDeviation, d[1] + DistanceDeviation);
+						b[1] = isNumberInBetween(d[1], d[2] - DistanceDeviation, d[2] + DistanceDeviation);
+						if((b[0] == true) &&(b[1] == true))
+							Found = true;
+					}
+					else
+					{
+						Found = true;					
+					}
+				}
+			}
+			if(!Found)
+			{
+				cvClearSeq(FoundCircles);
+				cvClearMemStorage(Storage);
+			}
+		}
+		CannyMaxLowThreshold--;
+	}
+
+	//cvReleaseImage(&ArenaImage); //Used For Debugging Later
+	cvReleaseImage(&grArenaImage);
+	cvReleaseImage(&Gradient);
+	cvReleaseImage(&Temp);
+	//cvReleaseImage(&CannyCircle); //Used For Debugging Later
+	cvReleaseMemStorage(&Storage);
+	delete Position;
+	
+	double AverageRadius = 0;
+
+	if(Found)
+	{
+		for(i = 0; i < NumberOfBaseCamps; i++)
+		{			
+			BaseCamp[i].Center = CenterPoints[i];  
+			BaseCamp[i].Radius = RadiusOfFoundCircles[i];
+			AverageRadius = AverageRadius + RadiusOfFoundCircles[i];
+		}
+		AverageRadius = AverageRadius/NumberOfBaseCamps;
+		MetersPerPixel = BaseCampRadius/AverageRadius;
+		PixelsPerMeter = AverageRadius/BaseCampRadius;	
+		
+		/*
+		For Debugging
+		*/
+		cout<<"Circle Accumulator Threshold: "<<CircleAccumulatorThreshold<<endl;
+		cout<<"Canny Threshold: "<<CannyMaxLowThreshold<<endl<<endl;
+		int r,g,b,R,G,B;
+		r=g=b=0;
+		for(i = 0; i < NumberOfBaseCamps; i++)
+		{
+			switch(i)
+			{
+			case 0:
+				r = 1;
+				b= 0;
+				g = 0;
+				break;
+			case 1:
+				r = 0;
+				b= 1;
+				g = 0;
+				break;
+			case 2:
+				r = 0;
+				b= 0;
+				g = 1;
+				break;
+			}
+			R = 255*r;
+			G = 255*g;
+			B = 255*b;
+
+			cout<<"Circle #: "<<i+1<<endl;
+			cout<<"Center x: "<<BaseCamp[i].Center.x<<endl;
+			cout<<"Center y: "<<BaseCamp[i].Center.y<<endl;
+			cout<<"Radius r: "<<BaseCamp[i].Radius<<endl;
+			cout<<"Colour :"<<"\nR: "<<r<<"\nG: "<<g<<"\nB: "<<b<<endl<<endl;
+			cvCircle(ArenaImage, BaseCamp[i].Center, BaseCamp[i].Radius, CV_RGB(R,G,B),1);
+			//cvCircle(CannyCircle, BaseCamp[i].Center, BaseCamp[i].Radius, CV_RGB(R,G,B),1);
+
+		}
+		cvNamedWindow("Found Base Camps", CV_WINDOW_AUTOSIZE);
+		cvShowImage("Found Base Camps", ArenaImage);
+		cvNamedWindow("Canny Image", CV_WINDOW_AUTOSIZE);
+		cvShowImage("Canny Image", CannyCircle);
+
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+	return -1;
+}
+
+
+CvPoint FindLed2(unsigned char LedNumber, unsigned char Rmax, unsigned char Rmin,unsigned char Gmax, unsigned char Gmin, unsigned char Bmax, unsigned char Bmin)
+{
+	SendMessageToMCU(LEDOff);
+	Sleep(500);
+
+	IplImage *ArenaImage = NULL;
+	cout<<"\nFinding led";
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+	cout<<"\nTaken frame";
+	SendMessageToMCU(LedNumber);
+
+	IplImage *LedOnImage = NULL;
+	IplImage *LedImage = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+	IplImage *OffR = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+	IplImage *OffG = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+	IplImage *OffB = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+
+	IplImage *OnR = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+	IplImage *OnG = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+	IplImage *OnB = cvCreateImage(cvGetSize(ArenaImage), IPL_DEPTH_8U, 1);
+
+	unsigned long SumOfIntensities = 0;
+	double Xcm = 0, Ycm = 0;
+	unsigned char *Data;
+	unsigned char *RData;
+	unsigned char *GData;
+	unsigned char *BData;
+	int i, j;
+
+	//Delay required
+	Sleep(500);
+	
+	while(!isFrameAvailable());
+	LedOnImage = cvCloneImage(Frame);
+		
+	SendMessageToMCU(LEDOff);
+	cvSplit(ArenaImage, OffB, OffG, OffR, NULL);
+	cvSplit(LedOnImage, OnB, OnG, OnR, NULL);
+
+	cvSub(OnB, OffB, OnB);
+	cvSub(OnG, OffG, OnG);
+	cvSub(OnR, OffR, OnR);
+
+
+	for(i = 0; i < ArenaImage->height; i++)
+	{
+		for(j = 0; j < ArenaImage->width; j++)
+		{
+			RData = (unsigned char *)(OnR->imageData + OnR->widthStep*i + j);
+			GData = (unsigned char *)(OnG->imageData + OnG->widthStep*i + j);
+			BData = (unsigned char *)(OnB->imageData + OnB->widthStep*i + j);
+				
+			if(isNumberInBetween(*RData, Rmin, Rmax) && isNumberInBetween(*GData, Gmin, Gmax) && isNumberInBetween(*BData, Bmin, Bmax))
+			{
+				//cout<<"\n\nx: "<<j<<", y: "<<i;
+				//cvWaitKey();
+				*RData = 255;
+				*GData = 255;
+				*BData = 255;
+			}
+			else
+			{
+				*RData = 0;
+				*GData = 0;
+				*BData = 0;
+			}
+		}
+	}
+
+	double Mean = cvMean(LedImage);
+	for(i = 0; i < OnR->height; i++)
+	{
+		for(j = 0; j < OnR->width; j++)
+		{
+			Data = (unsigned char *)(OnR->imageData + OnR->widthStep*i + j) ;
+			Xcm = Xcm + (*Data)*j;
+			Ycm = Ycm + (*Data)*i;
+			SumOfIntensities = SumOfIntensities + (*Data);
+		}
+	}
+	Xcm = Xcm/SumOfIntensities;
+	Ycm = Ycm/SumOfIntensities;
+	
+	CvPoint LedCoord = cvPoint(cvRound(Xcm), cvRound(Ycm));
+	
+	/*
+	IplImage *LedPositionImage = cvCloneImage(ArenaImage);
+	cvDrawCircle(LedPositionImage, LedCoord, 2, CV_RGB(0,255,0), 2);
+		
+	cvNamedWindow("LedImage", 1);
+	cvShowImage("LedImage", LedImage);
+
+	cvNamedWindow("FoundLedposition");
+	cvShowImage("FoundLedposition", LedPositionImage);
+	cvWaitKey();
+	cvReleaseImage(&LedPositionImage);
+	*/
+	
+	Sleep(500);
+	
+	return LedCoord;
+}
+
+CvPoint FindLed(unsigned char LedNumber)
+{
+	//cout<<"Switch Off Led\n";
+	//cvWaitKey();
+
+	SendMessageToMCU(LEDOff);
+	Sleep(500);
+
+	IplImage *ArenaImage = NULL;
+	cout<<"\nFinding led";
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+	cout<<"\nTaken frame";
+	SendMessageToMCU(LedNumber);
+
+	IplImage *LedOnImage = NULL;
+	IplImage *ArenaImagegr = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+	IplImage *LedImage = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+	IplImage *LedOnImagegr = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+
+	cvCvtColor(ArenaImage, ArenaImagegr, CV_BGR2GRAY);
+
+	unsigned long SumOfIntensities = 0;
+	double Xcm = 0, Ycm = 0;
+	unsigned char *Data;
+	int i, j;
+
+	//Delay required
+	Sleep(500);
+	
+	//cout<<"Switch On Led\n";
+	//cvWaitKey();
+
+	while(!isFrameAvailable());
+	LedOnImage = cvCloneImage(Frame);
+	cvCvtColor(LedOnImage, LedOnImagegr, CV_BGR2GRAY);
+		
+	SendMessageToMCU(LEDOff);
+	
+	cvSub(LedOnImagegr, ArenaImagegr, LedImage);
+	double Mean = cvMean(LedImage);
+	cvCmpS(LedImage, Mean + 100, LedImage, CV_CMP_GT);
+	cvErode(LedImage, LedImage);	//Required only if Changing light conditions give noise in LedImage
+	for(i = 0; i < LedImage->height; i++)
+	{
+		for(j = 0; j < LedImage->width; j++)
+		{
+			Data = (unsigned char *)(LedImage->imageData + LedImage->widthStep*i + j) ;
+			Xcm = Xcm + (*Data)*j;
+			Ycm = Ycm + (*Data)*i;
+			SumOfIntensities = SumOfIntensities + (*Data);
+		}
+	}
+	Xcm = Xcm/SumOfIntensities;
+	Ycm = Ycm/SumOfIntensities;
+	
+	CvPoint LedCoord = cvPoint(cvRound(Xcm), cvRound(Ycm));
+	
+	/*
+	IplImage *LedPositionImage = cvCloneImage(ArenaImage);
+	cvDrawCircle(LedPositionImage, LedCoord, 2, CV_RGB(0,255,0), 2);
+		
+	cvNamedWindow("LedImage", 1);
+	cvShowImage("LedImage", LedImage);
+
+	cvNamedWindow("FoundLedposition");
+	cvShowImage("FoundLedposition", LedPositionImage);
+	cvWaitKey();
+	cvReleaseImage(&LedPositionImage);
+	*/
+	
+	Sleep(750);
+	
+	cvReleaseImage(&ArenaImage);
+	cvReleaseImage(&ArenaImagegr);
+	cvReleaseImage(&LedOnImage);
+	cvReleaseImage(&LedOnImagegr);
+
+
+	return LedCoord;
+}
+
+
+
+Vector GetBotForwardVector(CvPoint &Led1Pos, CvPoint &Led2Pos)
+{
+	//cout<<"Switch Off Led\n";
+	//cvWaitKey();
+
+	/*
+	SendMessageToMCU(LEDOff);
+
+	IplImage *ArenaImage = NULL;
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+
+	SendMessageToMCU(LED1);
+
+	IplImage *LedOnImage = NULL;
+	IplImage *ArenaImagegr = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+	IplImage *LedImage = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+	IplImage *LedOnImagegr = cvCreateImage(cvGetSize(ArenaImage), 8, 1);
+
+	cvCvtColor(ArenaImage, ArenaImagegr, CV_BGR2GRAY);
+
+	unsigned long SumOfIntensities = 0;
+	double Xcm = 0, Ycm = 0;
+	unsigned char *Data;
+	int i, j;
+
+	//200-300 ms Delay required
+	Sleep(450);
+	
+	//cout<<"Switch On Led1\n";
+	//cvWaitKey();
+
+	while(!isFrameAvailable());
+	LedOnImage = cvCloneImage(Frame);
+	cvCvtColor(LedOnImage, LedOnImagegr, CV_BGR2GRAY);
+	
+	SendMessageToMCU(LEDOff);
+	SendMessageToMCU(LED2);
+
+	cvSub(LedOnImagegr, ArenaImagegr, LedImage);
+	double Mean = cvMean(LedImage);
+	cvCmpS(LedImage, Mean + 100, LedImage, CV_CMP_GT);
+	//cvErode(LedImage, LedImage);	//Required only if Changing light conditions give noise in LedImage
+	
+	for(i = 0; i < LedImage->height; i++)
+	{
+		for(j = 0; j < LedImage->width; j++)
+		{
+			Data = (unsigned char *)(LedImage->imageData + LedImage->widthStep*i + j) ;
+			Xcm = Xcm + (*Data)*j;
+			Ycm = Ycm + (*Data)*i;
+			SumOfIntensities = SumOfIntensities + (*Data);
+		}
+	}
+
+	Xcm = Xcm/SumOfIntensities;
+	Ycm = Ycm/SumOfIntensities;
+	CvPoint Led1Coord = cvPoint(cvRound(Xcm), cvRound(Ycm));
+	Led1Pos = Led1Coord;
+
+	//For Led2
+	//200-300 ms Delay Required
+	Sleep(450);
+
+	while(!isFrameAvailable());
+	LedOnImage = cvCloneImage(Frame);
+	cvCvtColor(LedOnImage, LedOnImagegr, CV_BGR2GRAY);
+	
+	SendMessageToMCU(LEDOff);
+	
+	cvSub(LedOnImagegr, ArenaImagegr, LedImage);
+	Mean = cvMean(LedImage);
+	cvCmpS(LedImage, Mean + 100, LedImage, CV_CMP_GT);
+	//cvErode(LedImage, LedImage);	//Required only if Changing light conditions give noise in LedImage
+	
+
+	Xcm = 0;
+	Ycm = 0;
+	SumOfIntensities = 0;
+	for(i = 0; i < LedImage->height; i++)
+	{
+		for(j = 0; j < LedImage->width; j++)
+		{
+			Data = (unsigned char *)(LedImage->imageData + LedImage->widthStep*i + j) ;
+			Xcm = Xcm + (*Data)*j;
+			Ycm = Ycm + (*Data)*i;
+			SumOfIntensities = SumOfIntensities + (*Data);
+		}
+	}
+	Xcm = Xcm/SumOfIntensities;
+	Ycm = Ycm/SumOfIntensities;
+	CvPoint Led2Coord = cvPoint(cvRound(Xcm), cvRound(Ycm));
+	Led2Pos = Led2Coord;
+	*/
+
+	CvPoint Led1Coord = FindLed2(LED1, 255, 180, 225, 100, 210, 100);
+	CvPoint Led2Coord = FindLed2(LED2, 255, 180, 225, 100, 210, 100);
+
+	Led1Pos = Led1Coord;
+	Led2Pos = Led2Coord;
+	
+	Vector BotForwardVector = VectorFromAtoB(Led1Coord, Led2Coord);
+	
+	return BotForwardVector;
+}
+
+double AlignBotToPoint(CvPoint Point, double AngleTolerance = 5)
+{
+	const unsigned long int MaxAlignmentTIme = 60000;	//Max Time That is allowed in ms
+	const unsigned long int TimePerDegree = 20;	//Time for bot to rotate 1 degree in ms
+	Vector BotVector;
+	Vector VectorFromBotToPoint;
+	CvPoint Led1, Led2;
+	double Angle = 0;
+	int Direction;
+	int Delay;
+	bool Aligned = false;
+	unsigned long int StartTime = GetTickCount();
+	unsigned long int CurrentTime = 0;
+	
+	do
+	{
+		SendMessageToMCU(StopMoving);		
+		BotVector = GetBotForwardVector(Led1, Led2);
+		
+		VectorFromBotToPoint = VectorFromAtoB(Led1, Point);
+		Angle = AngleBetween(BotVector, VectorFromBotToPoint);
+		Direction = VectorAwrtB(BotVector, VectorFromBotToPoint);
+		cout<<"\nAngle: "<<Angle;
+		if(isNumberInBetween(Angle, 0, AngleTolerance))
+		{
+			Direction = 2;
+		}
+		Delay = Angle*TimePerDegree;
+		switch(Direction)
+		{
+		case 0:	//Left
+			cout<<"\nLeft";
+			SendMessageToMCU(MoveLeft);
+			Sleep(Delay);
+			break;
+		case 1:	//Right
+			cout<<"\nRight";
+			SendMessageToMCU(MoveRight);
+			Sleep(Delay);
+			break;
+		case 2:	//Aligned
+			if(isNumberInBetween(Angle, 180 - 15, 180 + 15))
+			{
+				SendMessageToMCU(MoveRight);
+				Sleep(Delay);
+			}
+			else
+			{
+				Aligned = true;
+				cout<<"\nAligned";
+			}
+			break;
+		case -1:	//Error
+			MessageBoxA(NULL, "Direction Error", "Error", MB_OK | MB_ICONERROR);
+			break;
+		}
+		CurrentTime = GetTickCount() - StartTime;
+	}while((!Aligned) && (CurrentTime <= MaxAlignmentTIme));
+	SendMessageToMCU(StopMoving);
+	return Angle;
+}
+			
+void GetToBaseCamp(int BaseCampNumber)
+{
+	const unsigned long int TimePerMeter = 3500;	//Expected time that the bot takes to travel 1 meter
+	unsigned long int Delay = 0;
+	CvPoint Led1, Led2;
+	Vector BotForwardVector;
+	Vector VectorFromBotToBaseCampCenter;
+	double DistanceOfBotFromCenter = 0;
+	double AngleTolerance =5;
+	double Angle = 0;
+
+	cout<<"\nStopping motors\n";	
+	SendMessageToMCU(StopMoving);
+	
+	unsigned long int StartTime = GetTickCount();
+	unsigned long int CurrentTime = 0;
+	bool BaseCampReached = false;
+	cout<<"\nAligning";
+	Angle = AlignBotToPoint(BaseCamp[BaseCampNumber].Center, AngleTolerance);
+	cout<<"\nAligned";
+	cout<<"\nAngle: "<<Angle;
+
+	do
+	{
+		cout<<"Starting of Loop\n";
+		SendMessageToMCU(StopMoving);
+		
+		/*
+		cout<<"\nAbout to take forward vector";
+		Sleep(50);
+		BotForwardVector = GetBotForwardVector(Led1, Led2);
+		cout<<"\nTaken forward vector";
+		VectorFromBotToBaseCampCenter = VectorFromAtoB(Led1, BaseCamp[BaseCampNumber].Center);
+		Angle = AngleBetween(BotForwardVector, VectorFromBotToBaseCampCenter);
+		cout<<"\nInitial Angle: "<<Angle;
+		Sleep(100);
+		
+		//if(Angle >= AngleTolerance)
+		{
+			cout<<"\nAligning";
+			Angle = AlignBotToPoint(BaseCamp[BaseCampNumber].Center, AngleTolerance);
+			cout<<"\nAligned";
+			cout<<"\nAngle: "<<Angle;
+		}
+		Sleep(100);
+		*/
+		Led1 = FindLed2(LED1, 255, 180, 215, 100, 205, 100);
+		DistanceOfBotFromCenter = DistanceBetweenPoints(Led1, BaseCamp[BaseCampNumber].Center)*MetersPerPixel;
+		cout<<"\nDistance: "<<DistanceOfBotFromCenter;
+		Delay = DistanceOfBotFromCenter*TimePerMeter;
+		if(DistanceOfBotFromCenter <= BaseCampRadius)
+		{
+			BaseCampReached = true;
+		}
+		else
+		{
+			SendMessageToMCU(MoveForward);
+			Sleep(Delay);
+			CurrentTime = GetTickCount() - StartTime;
+		}
+	}while(!BaseCampReached);
+	SendMessageToMCU(StopMoving);
+	cout<<"\nReached";
+}
+
+
+
+int main()
+{
+	char ch = 0;
+
+	IplImage *Logo = cvLoadImage("Logo.jpg");
+	cvNamedWindow("SWAT");
+	cvShowImage("SWAT", Logo);
+	cout<<"Press any key when camera gets stable\n";
+	Initialize();
+	
+	cvWaitKey();
+	
+
+	while(!FindBaseCamps());
+	cvWaitKey();
+	
+	int BaseCampNum;
+	cout<<"Enter Number: ";
+	cin>>BaseCampNum;
+	BaseCampNum = BaseCampNum -1;
+
+	cout<<"\nx: "<<BaseCamp[BaseCampNum].Center.x;
+	cout<<"\ny: "<<BaseCamp[BaseCampNum].Center.y;
+	//AlignBotToPoint(BaseCamp[BaseCampNum].Center);
+	GetToBaseCamp(BaseCampNum);
+	cvWaitKey();
+
+	
+	/*
+	GetToBaseCamp(0);
+	cout<<"\nPress key to goto next base camp";
+	GetToBaseCamp(1);
+	cout<<"\nPress key to goto next base camp";
+	GetToBaseCamp(2);
+	cout<<"\nPress key to exit";
+	
+	
+
+	cout<<"\nw. Forward\n";
+	cout<<"d. Right\n";
+	cout<<"a. Left\n";
+	cout<<"s. Backwards\n";
+	cout<<" . (Space)Stop Moving\n";
+	cout<<"1. Led1On\n";
+	cout<<"2. Led2On\n";
+	cout<<"3. LedOff\n";
+	cout<<"4. StartLaser\n";
+	cout<<"5. StopLaser\n";
+	cout<<"ESC For Exit\n\n";
+	cout<<"Enter Choice: ";
+		
+	do
+	{
+		ch = _getch();
+		switch(ch)
+		{
+		case 'w':
+			SendMessageToMCU(MoveForward);
+			break;
+		case 'd':
+			SendMessageToMCU(MoveRight);
+			break;
+		case 'a':
+			SendMessageToMCU(MoveLeft);
+			break;
+		case ' ':
+			SendMessageToMCU(StopMoving);
+			break;
+		case '1':
+			SendMessageToMCU(LED1);
+			break;
+		case '2':
+			SendMessageToMCU(LED2);
+			break;
+		case '3':
+			SendMessageToMCU(LEDOff);
+			break;
+		case '4':
+			SendMessageToMCU(StartLaser);
+			break;
+		case '5':
+			SendMessageToMCU(StopLaser);
+			break;
+		case 's':
+			SendMessageToMCU(MoveBack);
+			break;
+		default:
+			SendMessageToMCU(StopMoving);
+			break;
+		}
+	}while(ch != 27);
+	*/
+	DeInitialize();
+	return 0;
+}
+
+
+
+
+

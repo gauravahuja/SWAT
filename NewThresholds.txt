@@ -1,0 +1,40 @@
+Led Threshold
+
+Rmax 255
+Rmin 220
+Gmax 255
+Gmin 200
+Bmax 230
+Bmin 200
+
+
+Blue Fort
+
+Rmax 170  200
+Rmin 110  120
+Gmax 255
+Gmin 240  235
+Bmax 255
+Bmin 240
+
+Yellow Fort
+
+Rmax 255
+Rmin 240  245
+Gmax 255
+Gmin 240
+Bmax 220  205
+Bmin 145  135
+
+Red Fort
+
+Rmax 255
+Rmin 245  240
+Gmax 175
+Gmin 135
+Bmax 180  200
+Bmin 150
+
+
+
+

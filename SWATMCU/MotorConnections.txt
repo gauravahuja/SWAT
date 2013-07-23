@@ -1,0 +1,10 @@
+PD6 PD7 Left Motor
+PD4 pd5 Right Motor
+
+Forward PD7 high, PD5 high, other Low
+Right: PD7 high, pd6 low, PD5 high and pd4 high(right motor active brake)
+left: PD5 high, pd4 low, other high
+back: pd7 and pd5 low other high 
+
+left motor: red=>black connector, black=>brown
+right motor: red=>brown, black=>black

@@ -1,0 +1,99 @@
+void StepperTestFullstep(double Angle)
+{
+	const double FullStepAngle = 1.8;	//Angle in Degrees
+	unsigned int NumberOfSteps = 0;
+	NumberOfSteps = (unsigned int)Angle/FullStepAngle;
+	unsigned int i;
+	unsigned int Data = 1;
+	for(i = 0; i <= NumberOfSteps; i++)
+	{
+		if(Data == 0x10)
+		{
+			Data = 0x01;
+		}
+		Out32(DATA, Data);
+		Data = Data<<1;
+		Sleep(10);
+	}
+	Out32(DATA, 0);	//Important else steppers takes all the current
+}
+
+int FindGreenLed()
+{
+	//IplImage *Frame = cvLoadImage("green.bmp");
+	
+	SendMessageToMCU(LED1);
+	IplImage *SplitImage;
+	SplitImage = cvCreateImage(cvSize(CameraImageWidth, CameraImagaHeight), IPL_DEPTH_8U, 1);
+	IplImage *ArenaImage;
+	IplImage *LED1i;
+	IplImage *LED2i;
+	IplImage *LEDOffi;
+	IplImage *Temp = cvCloneImage(SplitImage);
+
+	//Expected delay
+	cout<<"Switch on Led\n";
+	cvWaitKey(0);
+
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+	SendMessageToMCU(LEDOff);
+	SendMessageToMCU(LED2);
+
+	cvSplit(ArenaImage, NULL, NULL, SplitImage, NULL);
+	LED1i = cvCloneImage(SplitImage);
+	cvCopyImage(SplitImage, LED1i);
+	
+	cvNamedWindow("Led1", 1);
+	cvShowImage("Led1", LED1i);
+	
+	//Expected delay
+	cout<<"Switch On Led\n";
+	cvWaitKey(0);
+
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+	SendMessageToMCU(LEDOff);
+	cvSplit(ArenaImage, NULL, NULL,	SplitImage, NULL);
+	
+	LED2i = cvCloneImage(SplitImage);
+	cvCopyImage(SplitImage, LED2i);
+
+	cvNamedWindow("Led2", 1);
+	cvShowImage("Led2", LED2i);
+
+	//Expected delay
+	cout<<"Switch Off Led\n";
+	cvWaitKey(0);
+
+	while(!isFrameAvailable());
+	ArenaImage = cvCloneImage(Frame);
+	cvSplit(ArenaImage, NULL, NULL,	SplitImage, NULL);
+
+	LEDOffi = cvCloneImage(SplitImage);
+	cvCopyImage(SplitImage, LEDOffi);
+
+	cvNamedWindow("LedOff", 1);
+	cvShowImage("LedOff", LEDOffi);
+
+	cvSub(LED1i, LEDOffi, Temp);
+	cvErode(Temp, Temp);
+	cvSmooth(Temp, Temp, CV_GAUSSIAN);
+	return 0;
+}
+
+
+
+while(!isFrameAvailable());
+	IplImage *LedPositionImage = cvCloneImage(Frame);
+	cvDrawCircle(LedPositionImage, Led1Coord, 2, CV_RGB(0,255,0), 2);
+	cvDrawCircle(LedPositionImage, Led2Coord, 2, CV_RGB(0,255,0), 2);
+	
+	
+	cvNamedWindow("LedImage", 1);
+	cvShowImage("LedImage", LedImage);
+
+	cvNamedWindow("FoundLedposition");
+	cvShowImage("FoundLedposition", LedPositionImage);
+	Sleep(1000);	
+	cvDestroyWindow("FoundLedposition");

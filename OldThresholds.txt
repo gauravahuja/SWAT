@@ -1,0 +1,31 @@
+Led
+Rmax 140
+Rmin 50
+Gmax 130
+Gmin 75
+Bmax 135
+Bmin 70
+
+Blue Fort
+Rmax 110
+Rmin 90
+Gmax 165
+Gmin 135
+Bmax 185
+Bmin 165
+
+Yellow Fort
+Rmax 255
+Rmin 230
+Gmax 255
+Gmin 230
+Bmax 180
+Bmin 150
+
+Red Fort
+Rmax 255
+Rmin 245
+Gmax 130
+Gmin 100
+Bmax 110
+Bmin 80

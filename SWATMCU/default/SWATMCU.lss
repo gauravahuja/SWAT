@@ -1,0 +1,745 @@
+
+SWATMCU.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000306  00000000  00000000  00000094  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000010  00800060  00000306  0000039a  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000003  00800070  00800070  000003aa  2**0
+                  ALLOC
+  3 .debug_aranges 00000020  00000000  00000000  000003aa  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_pubnames 000000bd  00000000  00000000  000003ca  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   000004ff  00000000  00000000  00000487  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 0000021b  00000000  00000000  00000986  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_line   000004a3  00000000  00000000  00000ba1  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  00000090  00000000  00000000  00001044  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_str    00000177  00000000  00000000  000010d4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_loc    000001ce  00000000  00000000  0000124b  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 000001f8  00000000  00000000  00001419  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 2a 00 	jmp	0x54	; 0x54 <__ctors_end>
+   4:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+   8:	0c 94 c8 00 	jmp	0x190	; 0x190 <__vector_2>
+   c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  10:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  14:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  18:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  1c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  20:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  24:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  28:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  2c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  30:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  34:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  38:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  3c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  40:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  44:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  48:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  4c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  50:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+
+00000054 <__ctors_end>:
+  54:	11 24       	eor	r1, r1
+  56:	1f be       	out	0x3f, r1	; 63
+  58:	cf e5       	ldi	r28, 0x5F	; 95
+  5a:	d8 e0       	ldi	r29, 0x08	; 8
+  5c:	de bf       	out	0x3e, r29	; 62
+  5e:	cd bf       	out	0x3d, r28	; 61
+
+00000060 <__do_copy_data>:
+  60:	10 e0       	ldi	r17, 0x00	; 0
+  62:	a0 e6       	ldi	r26, 0x60	; 96
+  64:	b0 e0       	ldi	r27, 0x00	; 0
+  66:	e6 e0       	ldi	r30, 0x06	; 6
+  68:	f3 e0       	ldi	r31, 0x03	; 3
+  6a:	02 c0       	rjmp	.+4      	; 0x70 <.do_copy_data_start>
+
+0000006c <.do_copy_data_loop>:
+  6c:	05 90       	lpm	r0, Z+
+  6e:	0d 92       	st	X+, r0
+
+00000070 <.do_copy_data_start>:
+  70:	a0 37       	cpi	r26, 0x70	; 112
+  72:	b1 07       	cpc	r27, r17
+  74:	d9 f7       	brne	.-10     	; 0x6c <.do_copy_data_loop>
+
+00000076 <__do_clear_bss>:
+  76:	10 e0       	ldi	r17, 0x00	; 0
+  78:	a0 e7       	ldi	r26, 0x70	; 112
+  7a:	b0 e0       	ldi	r27, 0x00	; 0
+  7c:	01 c0       	rjmp	.+2      	; 0x80 <.do_clear_bss_start>
+
+0000007e <.do_clear_bss_loop>:
+  7e:	1d 92       	st	X+, r1
+
+00000080 <.do_clear_bss_start>:
+  80:	a3 37       	cpi	r26, 0x73	; 115
+  82:	b1 07       	cpc	r27, r17
+  84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
+  86:	0e 94 b8 00 	call	0x170	; 0x170 <main>
+  8a:	0c 94 81 01 	jmp	0x302	; 0x302 <_exit>
+
+0000008e <__bad_interrupt>:
+  8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000092 <Stepper>:
+unsigned char Message = 0;
+unsigned char PrevMessage = 0;
+unsigned char StepperCurrentSteps = 0;
+
+void Stepper(unsigned char NumberOfSteps)
+{
+  92:	38 2f       	mov	r19, r24
+	StepperCurrentSteps = NumberOfSteps;
+  94:	80 93 72 00 	sts	0x0072, r24
+  98:	20 e0       	ldi	r18, 0x00	; 0
+    milliseconds can be achieved.
+ */
+void
+_delay_loop_2(uint16_t __count)
+{
+	__asm__ volatile (
+  9a:	40 e2       	ldi	r20, 0x20	; 32
+  9c:	5e e4       	ldi	r21, 0x4E	; 78
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x0C, 0x04, 0x06, 0x02, 0x03, 0x01, 0x09};
+	for(i = 0; i <= NumberOfSteps; i++)
+	{
+		Index = i%8;	
+		StepperPort = Data[Index];
+  9e:	e2 2f       	mov	r30, r18
+  a0:	f0 e0       	ldi	r31, 0x00	; 0
+  a2:	e7 70       	andi	r30, 0x07	; 7
+  a4:	f0 70       	andi	r31, 0x00	; 0
+  a6:	e8 59       	subi	r30, 0x98	; 152
+  a8:	ff 4f       	sbci	r31, 0xFF	; 255
+  aa:	80 81       	ld	r24, Z
+  ac:	85 bb       	out	0x15, r24	; 21
+  ae:	ca 01       	movw	r24, r20
+  b0:	01 97       	sbiw	r24, 0x01	; 1
+  b2:	f1 f7       	brne	.-4      	; 0xb0 <Stepper+0x1e>
+{
+	StepperCurrentSteps = NumberOfSteps;
+	unsigned char i;
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x0C, 0x04, 0x06, 0x02, 0x03, 0x01, 0x09};
+	for(i = 0; i <= NumberOfSteps; i++)
+  b4:	2f 5f       	subi	r18, 0xFF	; 255
+  b6:	32 17       	cp	r19, r18
+  b8:	90 f7       	brcc	.-28     	; 0x9e <Stepper+0xc>
+	{
+		Index = i%8;	
+		StepperPort = Data[Index];
+		_delay_ms(20);
+	}
+	StepperPort = 0;//Important else steppers takes all the current
+  ba:	15 ba       	out	0x15, r1	; 21
+}
+  bc:	08 95       	ret
+
+000000be <StepperToZero>:
+void StepperToZero()
+{
+	unsigned char i;
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04, 0x0C};
+	for(i = 0; i <= StepperCurrentSteps; i++)
+  be:	30 91 72 00 	lds	r19, 0x0072
+  c2:	20 e0       	ldi	r18, 0x00	; 0
+  c4:	40 e2       	ldi	r20, 0x20	; 32
+  c6:	5e e4       	ldi	r21, 0x4E	; 78
+	{
+		Index = i%8;	
+		StepperPort = Data[Index];
+  c8:	e2 2f       	mov	r30, r18
+  ca:	f0 e0       	ldi	r31, 0x00	; 0
+  cc:	e7 70       	andi	r30, 0x07	; 7
+  ce:	f0 70       	andi	r31, 0x00	; 0
+  d0:	e0 5a       	subi	r30, 0xA0	; 160
+  d2:	ff 4f       	sbci	r31, 0xFF	; 255
+  d4:	80 81       	ld	r24, Z
+  d6:	85 bb       	out	0x15, r24	; 21
+  d8:	ca 01       	movw	r24, r20
+  da:	01 97       	sbiw	r24, 0x01	; 1
+  dc:	f1 f7       	brne	.-4      	; 0xda <StepperToZero+0x1c>
+void StepperToZero()
+{
+	unsigned char i;
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04, 0x0C};
+	for(i = 0; i <= StepperCurrentSteps; i++)
+  de:	2f 5f       	subi	r18, 0xFF	; 255
+  e0:	32 17       	cp	r19, r18
+  e2:	90 f7       	brcc	.-28     	; 0xc8 <StepperToZero+0xa>
+	{
+		Index = i%8;	
+		StepperPort = Data[Index];
+		_delay_ms(20);
+	}
+	StepperPort = 0;//Important else steppers takes all the current
+  e4:	15 ba       	out	0x15, r1	; 21
+	StepperCurrentSteps = 0;
+  e6:	10 92 72 00 	sts	0x0072, r1
+}
+  ea:	08 95       	ret
+
+000000ec <StepperFullStep>:
+
+void StepperFullStep(unsigned char NumberOfSteps)
+{
+  ec:	20 e0       	ldi	r18, 0x00	; 0
+  ee:	91 e0       	ldi	r25, 0x01	; 1
+  f0:	40 e2       	ldi	r20, 0x20	; 32
+  f2:	5e e4       	ldi	r21, 0x4E	; 78
+
+	unsigned char i;
+	unsigned char Data = 1;
+	for(i = 0; i <= NumberOfSteps; i++)
+	{
+		if(Data == 0x10)
+  f4:	90 31       	cpi	r25, 0x10	; 16
+  f6:	09 f4       	brne	.+2      	; 0xfa <StepperFullStep+0xe>
+  f8:	91 e0       	ldi	r25, 0x01	; 1
+		{
+			Data = 0x01;
+		}
+		StepperPort = Data;
+  fa:	95 bb       	out	0x15, r25	; 21
+  fc:	fa 01       	movw	r30, r20
+  fe:	31 97       	sbiw	r30, 0x01	; 1
+ 100:	f1 f7       	brne	.-4      	; 0xfe <StepperFullStep+0x12>
+void StepperFullStep(unsigned char NumberOfSteps)
+{
+
+	unsigned char i;
+	unsigned char Data = 1;
+	for(i = 0; i <= NumberOfSteps; i++)
+ 102:	2f 5f       	subi	r18, 0xFF	; 255
+ 104:	82 17       	cp	r24, r18
+ 106:	10 f0       	brcs	.+4      	; 0x10c <StepperFullStep+0x20>
+		if(Data == 0x10)
+		{
+			Data = 0x01;
+		}
+		StepperPort = Data;
+		Data = Data<<1;
+ 108:	99 0f       	add	r25, r25
+ 10a:	f4 cf       	rjmp	.-24     	; 0xf4 <StepperFullStep+0x8>
+		_delay_ms(20);
+	}
+	StepperPort = 0;//Important else steppers takes all the current
+ 10c:	15 ba       	out	0x15, r1	; 21
+}
+ 10e:	08 95       	ret
+
+00000110 <StepperBringToZero>:
+void StepperBringToZero()
+{
+
+	unsigned char i;
+	unsigned char Data = 0x08;
+	for(i = 0; i <= StepperCurrentSteps; i++)
+ 110:	60 91 72 00 	lds	r22, 0x0072
+ 114:	30 e0       	ldi	r19, 0x00	; 0
+ 116:	28 e0       	ldi	r18, 0x08	; 8
+ 118:	40 e2       	ldi	r20, 0x20	; 32
+ 11a:	5e e4       	ldi	r21, 0x4E	; 78
+	{
+		StepperPort = ~Data;
+ 11c:	82 2f       	mov	r24, r18
+ 11e:	80 95       	com	r24
+ 120:	85 bb       	out	0x15, r24	; 21
+		if(Data == 0x00)
+ 122:	22 23       	and	r18, r18
+ 124:	09 f4       	brne	.+2      	; 0x128 <StepperBringToZero+0x18>
+ 126:	28 e0       	ldi	r18, 0x08	; 8
+		{
+			Data = 0x08;
+		}
+		Data = Data>>1;
+ 128:	26 95       	lsr	r18
+ 12a:	ca 01       	movw	r24, r20
+ 12c:	01 97       	sbiw	r24, 0x01	; 1
+ 12e:	f1 f7       	brne	.-4      	; 0x12c <StepperBringToZero+0x1c>
+void StepperBringToZero()
+{
+
+	unsigned char i;
+	unsigned char Data = 0x08;
+	for(i = 0; i <= StepperCurrentSteps; i++)
+ 130:	3f 5f       	subi	r19, 0xFF	; 255
+ 132:	63 17       	cp	r22, r19
+ 134:	98 f7       	brcc	.-26     	; 0x11c <StepperBringToZero+0xc>
+			Data = 0x08;
+		}
+		Data = Data>>1;
+		_delay_ms(20);
+	}
+	StepperPort = 0;//Important else steppers takes all the current
+ 136:	15 ba       	out	0x15, r1	; 21
+}
+ 138:	08 95       	ret
+
+0000013a <delay>:
+	PORTD = 0b11111111;
+}
+
+void delay(unsigned int ms)
+{
+	int i = ms/250;
+ 13a:	6a ef       	ldi	r22, 0xFA	; 250
+ 13c:	70 e0       	ldi	r23, 0x00	; 0
+ 13e:	0e 94 6d 01 	call	0x2da	; 0x2da <__udivmodhi4>
+ 142:	9b 01       	movw	r18, r22
+ 144:	40 e0       	ldi	r20, 0x00	; 0
+ 146:	50 e0       	ldi	r21, 0x00	; 0
+ 148:	64 e6       	ldi	r22, 0x64	; 100
+ 14a:	70 e0       	ldi	r23, 0x00	; 0
+ 14c:	09 c0       	rjmp	.+18     	; 0x160 <delay+0x26>
+	int j;
+	for(j=0;j<i;j++)
+ 14e:	84 ec       	ldi	r24, 0xC4	; 196
+ 150:	99 e0       	ldi	r25, 0x09	; 9
+ 152:	fb 01       	movw	r30, r22
+ 154:	31 97       	sbiw	r30, 0x01	; 1
+ 156:	f1 f7       	brne	.-4      	; 0x154 <delay+0x1a>
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+		{
+			// wait 1/10 ms
+			_delay_loop_2(((F_CPU) / 4e3) / 10);
+			__ticks --;
+ 158:	01 97       	sbiw	r24, 0x01	; 1
+		__ticks = 1;
+	else if (__tmp > 65535)
+	{
+		//	__ticks = requested delay in 1/10 ms
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+ 15a:	d9 f7       	brne	.-10     	; 0x152 <delay+0x18>
+ 15c:	4f 5f       	subi	r20, 0xFF	; 255
+ 15e:	5f 4f       	sbci	r21, 0xFF	; 255
+ 160:	42 17       	cp	r20, r18
+ 162:	53 07       	cpc	r21, r19
+ 164:	a4 f3       	brlt	.-24     	; 0x14e <delay+0x14>
+		_delay_ms(250);
+}
+ 166:	08 95       	ret
+
+00000168 <WDT_off>:
+
+void WDT_off(void)
+{
+/* Write logical one to WDTOE and WDE */
+WDTCR = (1<<WDTOE) | (1<<WDE);
+ 168:	88 e1       	ldi	r24, 0x18	; 24
+ 16a:	81 bd       	out	0x21, r24	; 33
+/* Turn off WDT */
+WDTCR = 0x00;
+ 16c:	11 bc       	out	0x21, r1	; 33
+}
+ 16e:	08 95       	ret
+
+00000170 <main>:
+
+int main()
+{
+	DDRD = 0xF0;
+ 170:	80 ef       	ldi	r24, 0xF0	; 240
+ 172:	81 bb       	out	0x11, r24	; 17
+	DDRC = 0xFF;
+ 174:	8f ef       	ldi	r24, 0xFF	; 255
+ 176:	84 bb       	out	0x14, r24	; 20
+	DDRB = 0xFF;
+ 178:	87 bb       	out	0x17, r24	; 23
+	DDRA = 0x00;
+ 17a:	1a ba       	out	0x1a, r1	; 26
+	PORTA = 0;
+ 17c:	1b ba       	out	0x1b, r1	; 27
+	PORTB = 0;
+ 17e:	18 ba       	out	0x18, r1	; 24
+	PORTC = 0;
+ 180:	15 ba       	out	0x15, r1	; 21
+	PORTD = 0;
+ 182:	12 ba       	out	0x12, r1	; 18
+	
+	GICR |= (1<<INT1);	//enable INT1
+ 184:	8b b7       	in	r24, 0x3b	; 59
+ 186:	80 68       	ori	r24, 0x80	; 128
+ 188:	8b bf       	out	0x3b, r24	; 59
+	MCUCR = 0;			// Interrupt on low level
+ 18a:	15 be       	out	0x35, r1	; 53
+	sei();
+ 18c:	78 94       	sei
+ 18e:	ff cf       	rjmp	.-2      	; 0x18e <main+0x1e>
+
+00000190 <__vector_2>:
+	}
+	return 0;
+}
+
+ISR(INT1_vect)
+{
+ 190:	1f 92       	push	r1
+ 192:	0f 92       	push	r0
+ 194:	0f b6       	in	r0, 0x3f	; 63
+ 196:	0f 92       	push	r0
+ 198:	11 24       	eor	r1, r1
+ 19a:	2f 93       	push	r18
+ 19c:	3f 93       	push	r19
+ 19e:	4f 93       	push	r20
+ 1a0:	5f 93       	push	r21
+ 1a2:	6f 93       	push	r22
+ 1a4:	8f 93       	push	r24
+ 1a6:	9f 93       	push	r25
+ 1a8:	ef 93       	push	r30
+ 1aa:	ff 93       	push	r31
+	Message = PINA;
+ 1ac:	29 b3       	in	r18, 0x19	; 25
+ 1ae:	20 93 70 00 	sts	0x0070, r18
+	unsigned char i;
+	if(PrevMessage == SetLaserAngle)
+ 1b2:	80 91 71 00 	lds	r24, 0x0071
+ 1b6:	80 38       	cpi	r24, 0x80	; 128
+ 1b8:	b1 f4       	brne	.+44     	; 0x1e6 <__vector_2+0x56>
+	{
+		PrevMessage = 0;
+ 1ba:	10 92 71 00 	sts	0x0071, r1
+unsigned char PrevMessage = 0;
+unsigned char StepperCurrentSteps = 0;
+
+void Stepper(unsigned char NumberOfSteps)
+{
+	StepperCurrentSteps = NumberOfSteps;
+ 1be:	20 93 72 00 	sts	0x0072, r18
+ 1c2:	30 e0       	ldi	r19, 0x00	; 0
+ 1c4:	40 e2       	ldi	r20, 0x20	; 32
+ 1c6:	5e e4       	ldi	r21, 0x4E	; 78
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x0C, 0x04, 0x06, 0x02, 0x03, 0x01, 0x09};
+	for(i = 0; i <= NumberOfSteps; i++)
+	{
+		Index = i%8;	
+		StepperPort = Data[Index];
+ 1c8:	e3 2f       	mov	r30, r19
+ 1ca:	f0 e0       	ldi	r31, 0x00	; 0
+ 1cc:	e7 70       	andi	r30, 0x07	; 7
+ 1ce:	f0 70       	andi	r31, 0x00	; 0
+ 1d0:	e8 59       	subi	r30, 0x98	; 152
+ 1d2:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1d4:	80 81       	ld	r24, Z
+ 1d6:	85 bb       	out	0x15, r24	; 21
+ 1d8:	ca 01       	movw	r24, r20
+ 1da:	01 97       	sbiw	r24, 0x01	; 1
+ 1dc:	f1 f7       	brne	.-4      	; 0x1da <__vector_2+0x4a>
+{
+	StepperCurrentSteps = NumberOfSteps;
+	unsigned char i;
+	unsigned char Index = 0;
+	static unsigned char Data[8] = { 0x08, 0x0C, 0x04, 0x06, 0x02, 0x03, 0x01, 0x09};
+	for(i = 0; i <= NumberOfSteps; i++)
+ 1de:	3f 5f       	subi	r19, 0xFF	; 255
+ 1e0:	23 17       	cp	r18, r19
+ 1e2:	90 f7       	brcc	.-28     	; 0x1c8 <__vector_2+0x38>
+ 1e4:	57 c0       	rjmp	.+174    	; 0x294 <__vector_2+0x104>
+		StepperCurrentSteps = Message;
+		Stepper(Message);
+	}
+	else
+	{
+		switch(Message)
+ 1e6:	20 38       	cpi	r18, 0x80	; 128
+ 1e8:	09 f4       	brne	.+2      	; 0x1ec <__vector_2+0x5c>
+ 1ea:	63 c0       	rjmp	.+198    	; 0x2b2 <__vector_2+0x122>
+ 1ec:	21 38       	cpi	r18, 0x81	; 129
+ 1ee:	80 f4       	brcc	.+32     	; 0x210 <__vector_2+0x80>
+ 1f0:	22 30       	cpi	r18, 0x02	; 2
+ 1f2:	41 f1       	breq	.+80     	; 0x244 <__vector_2+0xb4>
+ 1f4:	23 30       	cpi	r18, 0x03	; 3
+ 1f6:	30 f4       	brcc	.+12     	; 0x204 <__vector_2+0x74>
+ 1f8:	22 23       	and	r18, r18
+ 1fa:	61 f1       	breq	.+88     	; 0x254 <__vector_2+0xc4>
+ 1fc:	21 30       	cpi	r18, 0x01	; 1
+ 1fe:	09 f0       	breq	.+2      	; 0x202 <__vector_2+0x72>
+ 200:	5e c0       	rjmp	.+188    	; 0x2be <__vector_2+0x12e>
+ 202:	17 c0       	rjmp	.+46     	; 0x232 <__vector_2+0xa2>
+ 204:	23 30       	cpi	r18, 0x03	; 3
+ 206:	11 f1       	breq	.+68     	; 0x24c <__vector_2+0xbc>
+ 208:	24 30       	cpi	r18, 0x04	; 4
+ 20a:	09 f0       	breq	.+2      	; 0x20e <__vector_2+0x7e>
+ 20c:	58 c0       	rjmp	.+176    	; 0x2be <__vector_2+0x12e>
+ 20e:	15 c0       	rjmp	.+42     	; 0x23a <__vector_2+0xaa>
+ 210:	28 3c       	cpi	r18, 0xC8	; 200
+ 212:	09 f4       	brne	.+2      	; 0x216 <__vector_2+0x86>
+ 214:	41 c0       	rjmp	.+130    	; 0x298 <__vector_2+0x108>
+ 216:	29 3c       	cpi	r18, 0xC9	; 201
+ 218:	30 f4       	brcc	.+12     	; 0x226 <__vector_2+0x96>
+ 21a:	21 38       	cpi	r18, 0x81	; 129
+ 21c:	f9 f0       	breq	.+62     	; 0x25c <__vector_2+0xcc>
+ 21e:	22 38       	cpi	r18, 0x82	; 130
+ 220:	09 f0       	breq	.+2      	; 0x224 <__vector_2+0x94>
+ 222:	4d c0       	rjmp	.+154    	; 0x2be <__vector_2+0x12e>
+ 224:	1f c0       	rjmp	.+62     	; 0x264 <__vector_2+0xd4>
+ 226:	29 3c       	cpi	r18, 0xC9	; 201
+ 228:	d9 f1       	breq	.+118    	; 0x2a0 <__vector_2+0x110>
+ 22a:	2b 3c       	cpi	r18, 0xCB	; 203
+ 22c:	09 f0       	breq	.+2      	; 0x230 <__vector_2+0xa0>
+ 22e:	47 c0       	rjmp	.+142    	; 0x2be <__vector_2+0x12e>
+ 230:	3b c0       	rjmp	.+118    	; 0x2a8 <__vector_2+0x118>
+		{
+		case MoveForward:
+			PrevMessage = MoveForward;
+ 232:	20 93 71 00 	sts	0x0071, r18
+	StepperPort = 0;//Important else steppers takes all the current
+}
+
+inline void Forward()
+{
+	PORTD = 0b10101111;
+ 236:	8f ea       	ldi	r24, 0xAF	; 175
+ 238:	03 c0       	rjmp	.+6      	; 0x240 <__vector_2+0xb0>
+		case MoveForward:
+			PrevMessage = MoveForward;
+			Forward();
+			break;
+		case MoveBack:
+			PrevMessage = MoveBack;
+ 23a:	20 93 71 00 	sts	0x0071, r18
+{
+	PORTD = 0b10101111;
+}
+inline void Backwards()
+{
+	PORTD = 0b01011111;
+ 23e:	8f e5       	ldi	r24, 0x5F	; 95
+ 240:	82 bb       	out	0x12, r24	; 18
+ 242:	3d c0       	rjmp	.+122    	; 0x2be <__vector_2+0x12e>
+		case MoveBack:
+			PrevMessage = MoveBack;
+			Backwards();
+			break;
+		case MoveRight:
+			PrevMessage = MoveRight;
+ 244:	20 93 71 00 	sts	0x0071, r18
+{
+	PORTD = 0b11101111;
+}
+inline void TurnRight()
+{
+	PORTD = 0b10111111;
+ 248:	8f eb       	ldi	r24, 0xBF	; 191
+ 24a:	fa cf       	rjmp	.-12     	; 0x240 <__vector_2+0xb0>
+		case MoveRight:
+			PrevMessage = MoveRight;
+			TurnRight();
+			break;
+		case MoveLeft:
+			PrevMessage = MoveLeft;
+ 24c:	20 93 71 00 	sts	0x0071, r18
+{
+	PORTD = 0b01011111;
+}
+inline void TurnLeft()
+{
+	PORTD = 0b11101111;
+ 250:	8f ee       	ldi	r24, 0xEF	; 239
+ 252:	f6 cf       	rjmp	.-20     	; 0x240 <__vector_2+0xb0>
+		case MoveLeft:
+			PrevMessage = MoveLeft;
+			TurnLeft();
+			break;
+		case StopMoving:
+			PrevMessage = StopMoving;
+ 254:	10 92 71 00 	sts	0x0071, r1
+{
+	PORTD = 0b10111111;
+}
+inline void StopMotors()
+{
+	PORTD = 0b11111111;
+ 258:	8f ef       	ldi	r24, 0xFF	; 255
+ 25a:	f2 cf       	rjmp	.-28     	; 0x240 <__vector_2+0xb0>
+		case StopMoving:
+			PrevMessage = StopMoving;
+			StopMotors();
+			break;
+		case StartLaser:
+			PrevMessage = StartLaser;
+ 25c:	20 93 71 00 	sts	0x0071, r18
+			PORTB |= (1<<PB2);
+ 260:	c2 9a       	sbi	0x18, 2	; 24
+ 262:	2d c0       	rjmp	.+90     	; 0x2be <__vector_2+0x12e>
+{
+	PORTD = 0b10111111;
+}
+inline void StopMotors()
+{
+	PORTD = 0b11111111;
+ 264:	8f ef       	ldi	r24, 0xFF	; 255
+ 266:	82 bb       	out	0x12, r24	; 18
+			PrevMessage = StartLaser;
+			PORTB |= (1<<PB2);
+			break;
+		case StopLaser:
+			StopMotors();
+			PrevMessage = StopLaser;
+ 268:	20 93 71 00 	sts	0x0071, r18
+			PORTB &= ~(1<<PB2);
+ 26c:	c2 98       	cbi	0x18, 2	; 24
+void StepperBringToZero()
+{
+
+	unsigned char i;
+	unsigned char Data = 0x08;
+	for(i = 0; i <= StepperCurrentSteps; i++)
+ 26e:	60 91 72 00 	lds	r22, 0x0072
+ 272:	28 e0       	ldi	r18, 0x08	; 8
+ 274:	30 e0       	ldi	r19, 0x00	; 0
+ 276:	40 e2       	ldi	r20, 0x20	; 32
+ 278:	5e e4       	ldi	r21, 0x4E	; 78
+	{
+		StepperPort = ~Data;
+ 27a:	82 2f       	mov	r24, r18
+ 27c:	80 95       	com	r24
+ 27e:	85 bb       	out	0x15, r24	; 21
+		if(Data == 0x00)
+ 280:	22 23       	and	r18, r18
+ 282:	09 f4       	brne	.+2      	; 0x286 <__vector_2+0xf6>
+ 284:	28 e0       	ldi	r18, 0x08	; 8
+		{
+			Data = 0x08;
+		}
+		Data = Data>>1;
+ 286:	26 95       	lsr	r18
+ 288:	ca 01       	movw	r24, r20
+ 28a:	01 97       	sbiw	r24, 0x01	; 1
+ 28c:	f1 f7       	brne	.-4      	; 0x28a <__vector_2+0xfa>
+void StepperBringToZero()
+{
+
+	unsigned char i;
+	unsigned char Data = 0x08;
+	for(i = 0; i <= StepperCurrentSteps; i++)
+ 28e:	3f 5f       	subi	r19, 0xFF	; 255
+ 290:	63 17       	cp	r22, r19
+ 292:	98 f7       	brcc	.-26     	; 0x27a <__vector_2+0xea>
+			Data = 0x08;
+		}
+		Data = Data>>1;
+		_delay_ms(20);
+	}
+	StepperPort = 0;//Important else steppers takes all the current
+ 294:	15 ba       	out	0x15, r1	; 21
+ 296:	13 c0       	rjmp	.+38     	; 0x2be <__vector_2+0x12e>
+			PrevMessage = StopLaser;
+			PORTB &= ~(1<<PB2);
+			StepperBringToZero();			
+			break;
+		case LED1On:
+			PrevMessage = LED1On;
+ 298:	20 93 71 00 	sts	0x0071, r18
+			PORTB |= (1<<PB0);
+ 29c:	c0 9a       	sbi	0x18, 0	; 24
+ 29e:	0f c0       	rjmp	.+30     	; 0x2be <__vector_2+0x12e>
+			break;
+		case LED2On:
+			PrevMessage = LED2On;
+ 2a0:	20 93 71 00 	sts	0x0071, r18
+			PORTB |= (1<<PB1);
+ 2a4:	c1 9a       	sbi	0x18, 1	; 24
+ 2a6:	0b c0       	rjmp	.+22     	; 0x2be <__vector_2+0x12e>
+			break;
+		case LEDOff:
+			PrevMessage = LEDOff;
+ 2a8:	20 93 71 00 	sts	0x0071, r18
+			PORTB &= ~(1<<PB0);
+ 2ac:	c0 98       	cbi	0x18, 0	; 24
+			PORTB &= ~(1<<PB1);
+ 2ae:	c1 98       	cbi	0x18, 1	; 24
+ 2b0:	06 c0       	rjmp	.+12     	; 0x2be <__vector_2+0x12e>
+{
+	PORTD = 0b10111111;
+}
+inline void StopMotors()
+{
+	PORTD = 0b11111111;
+ 2b2:	8f ef       	ldi	r24, 0xFF	; 255
+ 2b4:	82 bb       	out	0x12, r24	; 18
+			PORTB &= ~(1<<PB0);
+			PORTB &= ~(1<<PB1);
+			break;
+		case SetLaserAngle:
+			StopMotors();
+			PrevMessage = SetLaserAngle;
+ 2b6:	20 93 71 00 	sts	0x0071, r18
+			do
+			{
+				i = PIND & (1<<4);
+			}while(i == 0);
+ 2ba:	84 9b       	sbis	0x10, 4	; 16
+ 2bc:	fe cf       	rjmp	.-4      	; 0x2ba <__vector_2+0x12a>
+			break;
+		}
+	}
+}	
+ 2be:	ff 91       	pop	r31
+ 2c0:	ef 91       	pop	r30
+ 2c2:	9f 91       	pop	r25
+ 2c4:	8f 91       	pop	r24
+ 2c6:	6f 91       	pop	r22
+ 2c8:	5f 91       	pop	r21
+ 2ca:	4f 91       	pop	r20
+ 2cc:	3f 91       	pop	r19
+ 2ce:	2f 91       	pop	r18
+ 2d0:	0f 90       	pop	r0
+ 2d2:	0f be       	out	0x3f, r0	; 63
+ 2d4:	0f 90       	pop	r0
+ 2d6:	1f 90       	pop	r1
+ 2d8:	18 95       	reti
+
+000002da <__udivmodhi4>:
+ 2da:	aa 1b       	sub	r26, r26
+ 2dc:	bb 1b       	sub	r27, r27
+ 2de:	51 e1       	ldi	r21, 0x11	; 17
+ 2e0:	07 c0       	rjmp	.+14     	; 0x2f0 <__udivmodhi4_ep>
+
+000002e2 <__udivmodhi4_loop>:
+ 2e2:	aa 1f       	adc	r26, r26
+ 2e4:	bb 1f       	adc	r27, r27
+ 2e6:	a6 17       	cp	r26, r22
+ 2e8:	b7 07       	cpc	r27, r23
+ 2ea:	10 f0       	brcs	.+4      	; 0x2f0 <__udivmodhi4_ep>
+ 2ec:	a6 1b       	sub	r26, r22
+ 2ee:	b7 0b       	sbc	r27, r23
+
+000002f0 <__udivmodhi4_ep>:
+ 2f0:	88 1f       	adc	r24, r24
+ 2f2:	99 1f       	adc	r25, r25
+ 2f4:	5a 95       	dec	r21
+ 2f6:	a9 f7       	brne	.-22     	; 0x2e2 <__udivmodhi4_loop>
+ 2f8:	80 95       	com	r24
+ 2fa:	90 95       	com	r25
+ 2fc:	bc 01       	movw	r22, r24
+ 2fe:	cd 01       	movw	r24, r26
+ 300:	08 95       	ret
+
+00000302 <_exit>:
+ 302:	f8 94       	cli
+
+00000304 <__stop_program>:
+ 304:	ff cf       	rjmp	.-2      	; 0x304 <__stop_program>
